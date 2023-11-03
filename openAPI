@@ -1,0 +1,1010 @@
+openapi: 3.1.0
+info:
+  title: Taniland API
+  version: 1.0.0
+  description: API untuk Taniland.
+servers:
+  - url: https://api.m.taniland.id/
+
+paths:
+  /auth/signin:
+    post:
+      summary: Signin atau Signup pengguna
+      description: |
+        Endpoint ini menangani autentikasi pengguna. Jika pengguna sudah terdaftar, akan melakukan proses signin dan mengembalikan access token.
+        Jika pengguna belum terdaftar, akan melakukan proses signup dan mengembalikan access token.
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Email pengguna.
+                  example: user@example.com
+                username:
+                  type: string
+                  description: Username pengguna.
+                  example: user123
+                gambar:
+                  type: string
+                  description: URL atau nama file gambar pengguna.
+                  example: user.jpg
+      responses:
+        200:
+          description: Sukses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 200
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Sukses
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        description: Token akses.
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 400
+                  message:
+                    type: string
+                    description: Pesan error.
+                    example: Data tidak lengkap atau tidak valid.
+        500:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 500
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Terjadi kesalahan pada server. Periksa kembali data yang dikirim.
+
+  /auth/logout:
+    post:
+      summary: Logout pengguna
+      description: |
+        Endpoint ini menangani proses logout pengguna, menghapus semua session dan data session pada aplikasi.
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Sukses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 200
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Logout sukses.
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 401
+                  message:
+                    type: string
+                    description: Pesan error.
+                    example: Token tidak valid atau sudah kadaluarsa.
+        500:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 500
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Terjadi kesalahan pada server.
+
+  /sensor/data:
+    get:
+      summary: Menerima hasil sensor dari IoT
+      description: |
+        Endpoint ini menerima data hasil sensor dari IoT dan menyimpannya ke dalam entitas Rec pH, Temp, Humidity, NPK, Hama, dan Baterai.
+      tags:
+        - Sensor
+      parameters:
+        - name: sensor_id
+          in: query
+          required: true
+          description: ID alat sensor.
+          schema:
+            type: string
+        - name: ph
+          in: query
+          description: Nilai pH.
+          schema:
+            type: float
+        - name: temp
+          in: query
+          description: Nilai suhu dalam derajat Celsius.
+          schema:
+            type: float
+        - name: humidity
+          in: query
+          description: Nilai kelembapan dalam derajat Celcius.
+          schema:
+            type: float
+        # - name: npk
+        #   in: query
+        #   description: Nilai npk.
+        #   schema:
+        #     type: float
+        - name: pest
+          in: query
+          description: Jumlah hama yang terhitung.
+          schema:
+            type: float
+        - name: baterai
+          in: query
+          description: Sisa baterai.
+          schema:
+            type: float
+      responses:
+        200:
+          description: Sukses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 200
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Data sensor berhasil disimpan.
+        400:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 400
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Data sensor gagal disimpan, periksa kembali data yang terkirim.
+        500:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 500
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Terjadi kesalahan pada server. Periksa kembali data yang dikirim.
+  
+  /sensor:
+    post:
+      summary: Menambahkan Sensor
+      description: |
+        Endpoint ini menambahkan sensor baru ke sistem.
+      tags:
+        - Sensor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sensor_id:
+                  type: string
+                  description: ID sensor (QR Code).
+                  example: sensor123
+                nama:
+                  type: string
+                  description: Nama sensor.
+                  example: Sensor Utara
+                lahan_id:
+                  type: string
+                  description: ID lahan (opsional).
+                  example: lahan123
+      security:
+        - bearerAuth: []
+      responses:
+        201:
+          description: Sukses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 201
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Sensor berhasil ditambahkan.
+        400:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 400
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Data sensor gagal disimpan, periksa kembali data yang terkirim.
+        500:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 500
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Terjadi kesalahan pada server. Periksa kembali data yang dikirim.
+  
+  /sensor/connect:
+    put:
+      summary: Hubungkan Sensor
+      description: |
+        Endpoint ini mengupdate data lahan_id pada sensor untuk menghubungkannya dengan lahan yang sesuai.
+      tags:
+        - Sensor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sensor_id:
+                  type: string
+                  description: ID sensor.
+                  example: sensor123
+                lahan_id:
+                  type: string
+                  description: ID lahan.
+                  example: lahan123
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Sukses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 200
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Sensor berhasil dihubungkan dengan lahan.
+        400:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 400
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Data gagal disimpan, periksa kembali data yang terkirim.
+        500:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 500
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Terjadi kesalahan pada server. Periksa kembali data yang dikirim.
+  
+  /sensor/disconnect:
+    put:
+      summary: Putuskan Hubungan Sensor
+      description: |
+        Endpoint ini mengupdate data lahan_id pada sensor menjadi kosong, memutuskan hubungan sensor dengan lahan.
+      tags:
+        - Sensor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: Token akses pengguna.
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                sensor_id:
+                  type: string
+                  description: ID sensor.
+                  example: sensor123
+      responses:
+        200:
+          description: Sukses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 200
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Sensor berhasil diputuskan dari lahan.
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 400
+                  message:
+                    type: string
+                    description: Pesan error.
+                    example: Data tidak lengkap atau tidak valid.
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 500
+                  message:
+                    type: string
+                    description: Pesan error.
+                    example: Terjadi kesalahan pada server.
+
+  /sensor/:
+    get:
+      summary: Menampilkan Daftar Sensor
+      description: |
+        Endpoint ini menampilkan semua alat IoT yang telah didaftarkan beserta nama sensor, nama lahan, jumlah hama, dan sisa baterai.
+      tags:
+        - Sensor
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Sukses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 200
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Sukses
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        sensor_name:
+                          type: string
+                          description: Nama sensor.
+                          example: Sensor Suhu
+                        lahan_name:
+                          type: string
+                          description: Nama lahan.
+                          example: Lahan 1
+                        jumlah_hama:
+                          type: float
+                          description: Jumlah hama.
+                          example: 12
+                        sisa_baterai:
+                          type: float
+                          description: Sisa baterai dalam persen.
+                          example: 75.5
+        400:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 400
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Data gagal disimpan, periksa kembali data yang terkirim.
+        500:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 500
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Terjadi kesalahan pada server. Periksa kembali data yang dikirim.
+
+  /sensor/{sensor_id}:
+    get:
+      summary: Menampilkan Detail Sensor
+      description: |
+        Endpoint ini menampilkan semua detail sensor termasuk jumlah hama, sisa baterai, status power, dan rata-rata sehari untuk temperatur, kelembapan, dan pH.
+      tags:
+        - Sensor
+      parameters:
+        - name: sensor_id
+          in: path
+          required: true
+          description: ID sensor.
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Sukses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 200
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Sukses
+                  data:
+                    type: object
+                    properties:
+                      jumlah_hama:
+                        type: float
+                        description: Jumlah hama.
+                        example: 12
+                      sisa_baterai:
+                        type: float
+                        description: Sisa baterai dalam persen.
+                        example: 75.5
+                      status_power:
+                        type: string
+                        description: Status power sensor.
+                        example: ON
+                      rata_rata_sehari:
+                        type: object
+                        properties:
+                          temp:
+                            type: float
+                            description: Rata-rata temperatur sehari.
+                            example: 25.5
+                          humidity:
+                            type: float
+                            description: Rata-rata kelembapan sehari.
+                            example: 65.5
+                          ph:
+                            type: float
+                            description: Rata-rata pH sehari.
+                            example: 6.5
+        400:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 400
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Data gagal disimpan, periksa kembali data yang terkirim.
+        500:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 500
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Terjadi kesalahan pada server. Periksa kembali data yang dikirim.
+  
+  sensor/ph/:
+    get:
+      summary: Riwayat pH
+      description: |
+        Endpoint ini menampilkan riwayat pH sensor berdasarkan parameter waktu yang dipilih.
+      tags:
+        - pH
+      parameters:
+        - name: sensor_id
+          in: query
+          required: true
+          description: ID sensor.
+          schema:
+            type: string
+        - name: range
+          in: query
+          description: Rentang waktu untuk riwayat pH. Pilihan hari_ini (default), minggu_ini, bulan_ini, pilih_tanggal, semua_waktu.
+          schema:
+            type: string
+            enum: [hari_ini, minggu_ini, bulan_ini, pilih_tanggal, semua_waktu]
+        - name: tanggal_awal
+          in: query
+          description: Tanggal Awal yang dipilih jika range adalah pilih_tanggal.
+          schema:
+            type: string
+            format: date
+        - name: tanggal_akhir
+          in: query
+          description: Tanggal Akhir yang dipilih jika range adalah pilih_tanggal.
+          schema:
+            type: string
+            format: date
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Sukses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 200
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Sukses
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        value:
+                          type: float
+                          description: Nilai pH.
+                          example: 6.5
+                        timestamp:
+                          type: string
+                          format: date-time
+                          description: Waktu pengukuran pH.
+                          example: "2023-11-03T14:30:00Z"
+        400:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 400
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Data gagal disimpan, periksa kembali data yang terkirim.
+        500:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 500
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Terjadi kesalahan pada server. Periksa kembali data yang dikirim.
+  
+  sensor/temp/:
+    get:
+      summary: Riwayat Temp
+      description: |
+        Endpoint ini menampilkan riwayat Temp sensor berdasarkan parameter waktu yang dipilih.
+      tags:
+        - Temp
+      parameters:
+        - name: sensor_id
+          in: query
+          required: true
+          description: ID sensor.
+          schema:
+            type: string
+        - name: range
+          in: query
+          description: Rentang waktu untuk riwayat Temp. Pilihan hari_ini (default), minggu_ini, bulan_ini, pilih_tanggal, semua_waktu.
+          schema:
+            type: string
+            enum: [hari_ini, minggu_ini, bulan_ini, pilih_tanggal, semua_waktu]
+        - name: tanggal_awal
+          in: query
+          description: Tanggal Awal yang dipilih jika range adalah pilih_tanggal.
+          schema:
+            type: string
+            format: date
+        - name: tanggal_akhir
+          in: query
+          description: Tanggal Akhir yang dipilih jika range adalah pilih_tanggal.
+          schema:
+            type: string
+            format: date
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Sukses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 200
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Sukses
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        value:
+                          type: float
+                          description: Nilai Temp.
+                          example: 6.5
+                        timestamp:
+                          type: string
+                          format: date-time
+                          description: Waktu pengukuran Temp.
+                          example: "2023-11-03T14:30:00Z"
+        400:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 400
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Data gagal disimpan, periksa kembali data yang terkirim.
+        500:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 500
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Terjadi kesalahan pada server. Periksa kembali data yang dikirim.
+  
+  sensor/humidity/:
+    get:
+      summary: Riwayat Humidity
+      description: |
+        Endpoint ini menampilkan riwayat Humidity sensor berdasarkan parameter waktu yang dipilih.
+      tags:
+        - Humidity
+      parameters:
+        - name: sensor_id
+          in: query
+          required: true
+          description: ID sensor.
+          schema:
+            type: string
+        - name: range
+          in: query
+          description: Rentang waktu untuk riwayat Humidity. Pilihan hari_ini (default), minggu_ini, bulan_ini, pilih_tanggal, semua_waktu.
+          schema:
+            type: string
+            enum: [hari_ini, minggu_ini, bulan_ini, pilih_tanggal, semua_waktu]
+        - name: tanggal_awal
+          in: query
+          description: Tanggal Awal yang dipilih jika range adalah pilih_tanggal.
+          schema:
+            type: string
+            format: date
+        - name: tanggal_akhir
+          in: query
+          description: Tanggal Akhir yang dipilih jika range adalah pilih_tanggal.
+          schema:
+            type: string
+            format: date
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Sukses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 200
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Sukses
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        value:
+                          type: float
+                          description: Nilai Humidity.
+                          example: 6.5
+                        timestamp:
+                          type: string
+                          format: date-time
+                          description: Waktu pengukuran Humidity.
+                          example: "2023-11-03T14:30:00Z"
+        400:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 400
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Data gagal disimpan, periksa kembali data yang terkirim.
+        500:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 500
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Terjadi kesalahan pada server. Periksa kembali data yang dikirim.
+  
+  sensor/hama/:
+    get:
+      summary: Riwayat Hama
+      description: |
+        Endpoint ini menampilkan riwayat Hama sensor berdasarkan parameter waktu yang dipilih.
+      tags:
+        - Hama
+      parameters:
+        - name: sensor_id
+          in: query
+          required: true
+          description: ID sensor.
+          schema:
+            type: string
+        - name: range
+          in: query
+          description: Rentang waktu untuk riwayat Hama. Pilihan hari_ini (default), minggu_ini, bulan_ini, pilih_tanggal, semua_waktu.
+          schema:
+            type: string
+            enum: [hari_ini, minggu_ini, bulan_ini, pilih_tanggal, semua_waktu]
+        - name: tanggal_awal
+          in: query
+          description: Tanggal Awal yang dipilih jika range adalah pilih_tanggal.
+          schema:
+            type: string
+            format: date
+        - name: tanggal_akhir
+          in: query
+          description: Tanggal Akhir yang dipilih jika range adalah pilih_tanggal.
+          schema:
+            type: string
+            format: date
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Sukses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 200
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Sukses
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        value:
+                          type: float
+                          description: Nilai Hama.
+                          example: 6.5
+                        timestamp:
+                          type: string
+                          format: date-time
+                          description: Waktu pengukuran Hama.
+                          example: "2023-11-03T14:30:00Z"
+        400:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 400
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Data gagal disimpan, periksa kembali data yang terkirim.
+        500:
+          description: Gagal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Kode status.
+                    example: 500
+                  message:
+                    type: string
+                    description: Pesan respons.
+                    example: Terjadi kesalahan pada server. Periksa kembali data yang dikirim.
+  
+
+
+securitySchemes:
+  bearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
